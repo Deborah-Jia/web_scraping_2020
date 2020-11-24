@@ -49,17 +49,31 @@ as.character(v)
 
 
 # rvest -------------------------------------------------------------------
-
+# use insidebigdata for tutorial
 library(rvest) #Easily Harvest (Scrape) Web Pages
 
 t <- read_html('https://insidebigdata.com/?s=big+data')
-write_html(t, 't.html')
+write_html(t, 't.html') #always check its content
 
+titles <-
 t %>% 
-  html_nodes()
+  html_nodes('.entry-title-link') %>% html_text()
 
+dates <-
+  t %>% 
+  html_nodes('.time') %>% html_text()
 
+links <-
+  t %>% 
+  html_nodes('.entry-title-link') %>% html_attr("href")
+
+text_summary <-
+t %>% html_nodes("#content p") %>% html_text()
+
+df <- data.frame("title"=titles,"links"=links, "summary"= text_summary)
+# based on the fact that all three variables have same number of observations
 # practice_scraping -------------------------------------------------------
+# use wired website
 
 m <- read_html("https://www.wired.com/search/?q=big%20data&page=1&sort=score")
 write_html(m, "m.html")
@@ -74,15 +88,95 @@ m %>%
   html_nodes("time") %>% 
   html_text()
 
-my_link <- 
-unique(m %>% 
-  html_nodes('.archive-item-component__link') %>% 
-  html_attr('href')) #href means Hypertext REFerence
+author <- 
+  m %>% 
+  html_nodes(".byline-component__link") %>% html_text()
+
+links <- 
+  unique(
+  m %>% 
+  html_nodes('.archive-item-component__link') %>% # use "inspect" to find 'a class'
+  html_attr('href') )# don't forget "." and quotation mark!
 
 summary <-
 m %>% 
   html_nodes(".archive-item-component__desc") %>% 
   html_text()
 
-df <- data.frame('title' = titles, "time" = time, 'links' = my_link, 'summary' = summary)
+df <- data.frame('title' = titles, "time" = time, 'links' = links, 'summary' = summary)
 ## if you don't change the row content, the dataframe will not be created.
+## same problem here
+
+# we can first get the boxes then extract the elements
+# remember package data.table: via rbindlist(a list of dataframe) into a dataframe!
+
+# use function to automate this process! input an url, get a dataframe
+
+# after one page was done, we can change it to page 2 to get more data
+# in the end this session still does not solve the problem of multi length of variables!
+
+# after-session practice with wired ---------------------------------------
+library(rvest)
+library(data.table)
+my_url <- "https://www.wired.com/search/?q=big%20data&page=1&sort=score"
+
+get_one_page_wired <- function(my_url) {
+  m <- read_html(my_url)
+write_html(m, "m.html")
+
+boxes <-
+m %>% html_nodes(".archive-item-component") # no need to add html_text!
+# nest a new function inside lapply
+my_list_df <- lapply(boxes,function(x){
+  
+  titles <- 
+      x %>% 
+    html_nodes('.archive-item-component__title') %>% 
+    html_text()
+  if(length( titles) ==0){
+    time <- ""
+  }
+  
+  time <- # 9 time points only 
+    x %>% 
+    html_nodes("time") %>% 
+    html_text()
+  if(length(time) ==0){
+    time <- ""
+  }
+  
+  author <- # 9 authors only
+    x %>% 
+    html_nodes(".byline-component__link") %>% html_text()
+  if(length(author) ==0){
+    author <- ""
+  }
+  
+  links <- 
+    unique(
+      x %>% 
+        html_nodes('.archive-item-component__link') %>% # use "inspect" to find 'a class'
+        html_attr('href') )# don't forget "." and quotation mark!
+  
+  summary <-
+    x %>% 
+    html_nodes(".archive-item-component__desc") %>% 
+    html_text()
+  
+  return(data.frame("title"=titles, " times"= time,"author"=author ,"link"=links, "summary"=summary))
+  })
+page_df <- rbindlist(my_list_df)
+return(page_df)
+}
+
+m <- get_one_page_wired('https://www.wired.com/search/?q=big%20data&page=2&sort=score')
+
+m_urls <- paste0('https://www.wired.com/search/?q=big%20data&page=',2:6,'&sort=score')
+
+df_list <- lapply(m_urls, get_one_page_wired)
+
+df <- rbindlist(df_list)
+
+
+
+

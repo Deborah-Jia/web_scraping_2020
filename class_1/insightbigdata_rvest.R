@@ -1,3 +1,5 @@
+## this script does not use box
+
 library(rvest)
 library(data.table)
 #read_html just pass the url
@@ -72,11 +74,13 @@ get_insidebigdata_page <- function(my_url) {
 #try your function
 t <- get_insidebigdata_page('https://insidebigdata.com/page/2/?s=big+data')
 
-#create the urls
+#create the urls(to get 2-5 pages)
 t_urls <- paste0('https://insidebigdata.com/page/', 2:5, '/?s=big+data' )
+length(t_urls) # it is not the length of link!!!
 
 #apply your function to your list
-df_list <- lapply(t_urls, get_insidebigdata_page)
+df_list <- lapply(t_urls, get_insidebigdata_page) # process each link in t_urls, using get.... function
+# in the end, we get a list(length =4), each element of the list is a dataframe of (10*3)
 
 #create a data.table object of the list of data.frames
 df <- rbindlist(df_list)

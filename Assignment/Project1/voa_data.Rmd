@@ -1,0 +1,102 @@
+---
+title: VOA News Data
+author: Li Deborah Jia
+date: Nov, 24, 2020
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+## HTML process
+
+Find a news website or any website where you can search for a keyword and the matches return in a list. Create  a function which downloads information from a url to dataframe from the website that you found interesting.  Create a  function which requires two arguments. First a keyword then a number of pages to download. Create the links and apply your function to the links that you created and save the dataframe into csv and rds  objects. Create a pretydoc HTML where I can see the function and the result of it. Upload your code into github, and to module.The deadline is november 23.
+
+### The First Functon
+```{r,warning = FALSE, echo = TRUE, results='asis',include=TRUE, error=FALSE}
+library(rvest)
+library(data.table)
+
+# Create the functioin
+get_one_voa  <- function(my_url) {
+  
+  m <- read_html(my_url)
+
+  write_html(m, 'm.html')
+  
+  boxes <- 
+    m %>%
+    html_nodes('.vertical-list__item--bordered')
+  
+  list_of_df <- 
+    lapply(boxes, function(x){
+      
+      titles <- 
+        x %>% 
+        html_nodes('.teaser__title--dated') %>% 
+        html_text()
+      
+      times <- 
+        x %>% 
+        html_nodes('.teaser__date') %>% 
+        html_text()
+      if (length( times) ==0) {
+        times <- ''
+      }
+      
+      
+      my_link <- 
+        paste0('https://www.voanews.com', x %>% 
+        html_nodes('.teaser__title-link--dated') %>% 
+        html_attr('href'))
+      
+      text_summary <- 
+        x %>% 
+        html_nodes('.teaser__text--dated') %>% 
+        html_text()
+      
+      
+      categories <- 
+        x %>% html_nodes('.eyebrow a') %>% 
+        html_text()
+      if (length(categories) ==0) {
+        categories <- ''
+      }
+      
+      # it will be a one row data.frame
+      return(data.frame('categories' = categories, 'title'=titles,  'times'=times, 'links'=  my_link, 'summary'= text_summary))
+    })
+  
+  page_df <- rbindlist(list_of_df)
+  return(page_df)
+  
+}
+
+# try url with df1 as output
+library('knitr')
+df1 <- get_one_voa('https://www.voanews.com/search?search_api_fulltext=poverty&type=1&sort_by=publication_time&changed=All&sort_order=DESC&page=0')
+
+kable(head(df1[1,1:5]), format = "markdown") # output the first row of the dataframe
+
+write.csv(df1, "voa_pageone.csv")
+saveRDS(df1, "voa_pageone.rds")
+```
+
+### The Second Functon
+```{r,warning = FALSE, echo = TRUE, results='asis',include=TRUE, error=FALSE}
+searchterm <- "love peace" # set search term 
+
+get_more_voa <- function(searchterm, pages_download){
+  
+  searchterm <- gsub(' ','+',searchterm, fixed = T)
+  links_to_get <-
+    paste0('https://www.voanews.com/search?search_api_fulltext=',searchterm, '&type=1&sort_by=publication_time&changed=All&sort_order=DESC&page=', seq(0, pages_download))
+  ret_df <- rbindlist(lapply(links_to_get, get_one_voa))
+  return(ret_df)
+}
+# try url with df2 as output
+df2 <- get_more_voa(searchterm = 'China', 3)
+kable(head(df2[1,1:5]), format = "markdown") # output the first row of the dataframe
+write.csv(df2, "voa_page_more.csv")
+saveRDS(df2, "voa_voa_page_more.rds")
+```

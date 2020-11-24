@@ -1,3 +1,6 @@
+# first find the box, treat each piece of news as a whole
+# then extract each element
+
 library(rvest)
 library(data.table)
 #read_html just pass the url
@@ -9,9 +12,13 @@ boxes <-
   t %>%
   html_nodes('.has-post-thumbnail')
 
+# 1. write lapply, inside get categories (so categories will have the same length, 
+# and blank will be flagged as "")
+# but when you unlist lappy, "" will disappear
+# we can use if(length==) to re-assign blanks to each row
 
 
-# x <-boxes[3]  it helps to see what is going on in the lapply
+# x <-boxes[3]  it helps to see what is going on in the lapply, x is the third one in the boxes
 
 list_of_df <- 
 lapply(boxes, function(x){
