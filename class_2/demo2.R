@@ -169,3 +169,28 @@ get_techworld <- function(searchterm, pages_download){
   }
 
 df <- get_techworld(searchterm = 'hate', 2)
+
+
+# wiki page with table ----------------------------------------------------
+library(rvest)
+library(jsonlite)
+
+my_url <- "https://en.wikipedia.org/wiki/Car"
+t <- read_html(my_url)
+list_of_table <- t %>%  html_table(fill=TRUE)
+
+View(list_of_table [[1]]) # we saw a dataframe
+
+df <- list_of_table [[1]]
+
+df <- fromJSON("http://deathtimeline.com/api/deaths?season=1") # we get a dataframe
+
+list_df <- fromJSON("http://deathtimeline.com/api/deaths?season=1", simplifyDataFrame = FALSE) # we get a list
+
+# get pictures in a loop
+# use json element to get dataframe or list
+# get most powerful companies
+
+
+
+

@@ -6,7 +6,7 @@ car_links <- c('https://www.ultimatespecs.com/car-specs/Aston-Martin/117232/Asto
 
 process_one_car_page  <- function(my_link) {
 
-  #my_link <- 'https://www.ultimatespecs.com/car-specs/Aston-Martin/117232/Aston-Martin-DBX-40-V8.html'
+#my_link <- 'https://www.ultimatespecs.com/car-specs/Aston-Martin/117232/Aston-Martin-DBX-40-V8.html'
   
   data_list <- list()
   t <- read_html(my_link)
@@ -32,4 +32,4 @@ process_one_car_page  <- function(my_link) {
 }
 
 
-df <- rbindlist(lapply(car_links, process_one_car_page), fill = T)
+df <- rbindlist(lapply(my_url, process_one_car_page), fill = T)
